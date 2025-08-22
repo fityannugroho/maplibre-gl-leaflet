@@ -159,15 +159,26 @@
             this._glMap = new maplibregl.Map(options);
 
             var _map = this._map;
-            var _currentAttribution = this.getAttribution();
             var _getAttribution = this.getAttribution.bind(this);
-            this._glMap.on('load', function () {
-                // Force attribution update
+            var _currentAttribution = null;
+
+            var _updateAttribution = function () {
                 if (_map && _map.attributionControl) {
-                    _map.attributionControl.removeAttribution(_currentAttribution);
-                    _map.attributionControl.addAttribution(_getAttribution());
+                    var newAttr = _getAttribution();
+                    if (newAttr !== _currentAttribution) {
+                        if (_currentAttribution) {
+                            _map.attributionControl.removeAttribution(_currentAttribution);
+                        }
+                        if (newAttr) {
+                            _map.attributionControl.addAttribution(newAttr);
+                        }
+                        _currentAttribution = newAttr;
+                    }
                 }
-            });
+            };
+
+            this._glMap.on('load', _updateAttribution);
+            this._glMap.on('styledata', _updateAttribution);
 
             // allow GL base map to pan beyond min/max latitudes
             // Defensively check if properties are writable before setting them,
