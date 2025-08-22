@@ -86,9 +86,10 @@
                     var attributions = Object.keys(style.sources)
                         .map(function (sourceId) {
                             var styleSource = style.sources[sourceId];
-                            return (styleSource && typeof styleSource.attribution === 'string')
-                                ? styleSource.attribution.trim()
-                                : null;
+                            if (styleSource && typeof styleSource.attribution === 'string') {
+                                return styleSource.attribution.trim();
+                            }
+                            return null;
                         })
                         .filter(Boolean); // Remove null/undefined values
 
