@@ -77,18 +77,22 @@
                 return this.options.attributionControl.customAttribution;
             }
 
-            // Gather attributions from MapLibre styles
+            // Gather attributions from MapLibre style sources
             var map = this._glMap;
             if (map && this.options.attributionControl !== false) {
                 var style = map.getStyle();
+
                 if (style && style.sources) {
-                    return Object.keys(style.sources)
+                    var attributions = Object.keys(style.sources)
                         .map(function (sourceId) {
-                            var source = map.getSource(sourceId);
-                            return (source && typeof source.attribution === 'string') ? source.attribution.trim() : null;
+                            var styleSource = style.sources[sourceId];
+                            return (styleSource && typeof styleSource.attribution === 'string')
+                                ? styleSource.attribution.trim()
+                                : null;
                         })
-                        .filter(Boolean) // Remove null/undefined values
-                        .join(', ');
+                        .filter(Boolean); // Remove null/undefined values
+
+                    return attributions.join(', ');
                 }
             }
 
@@ -165,6 +169,7 @@
             var _updateAttribution = function () {
                 if (_map && _map.attributionControl) {
                     var newAttr = _getAttribution();
+
                     if (newAttr !== _currentAttribution) {
                         if (_currentAttribution) {
                             _map.attributionControl.removeAttribution(_currentAttribution);
@@ -177,14 +182,9 @@
                 }
             };
 
-            this._glMap.on('load', _updateAttribution);
+            // Listen to styledata event - this fires when style changes
+            // including when switching between different styles
             this._glMap.on('styledata', _updateAttribution);
-            this._glMap.on('style.load', _updateAttribution);
-            this._glMap.on('sourcedata', function (e) {
-                if (e.sourceDataType === 'metadata' && e.isSourceLoaded) {
-                    _updateAttribution();
-                }
-            });
 
             // allow GL base map to pan beyond min/max latitudes
             // Defensively check if properties are writable before setting them,
